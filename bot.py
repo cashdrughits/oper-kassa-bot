@@ -8,7 +8,10 @@ from telebot import types
 import signal
 import sys
 from threading import Thread
-from flask import Flask
+import time
+from dotenv import load_dotenv
+
+load_dotenv()
 
 TELEGRAM_TOKEN = os.getenv('TELEGRAM_TOKEN')
 BOT_PASSWORD = os.getenv('BOT_PASSWORD')
@@ -26,22 +29,6 @@ logging.basicConfig(
         logging.StreamHandler()
     ]
 )
-
-# Flask приложение для healthcheck (чтобы Render не усыпил бота)
-app = Flask(__name__)
-
-@app.route('/')
-def home():
-    return "Currency Bot is running!", 200
-
-@app.route('/health')
-def health():
-    return {"status": "ok", "bot": "running"}, 200
-
-def run_flask():
-    """Запуск Flask в отдельном потоке"""
-    port = int(os.getenv('PORT', 10000))
-    app.run(host='0.0.0.0', port=port, debug=False, use_reloader=False)
 
 bot = telebot.TeleBot(TELEGRAM_TOKEN)
 # Словарь для хранения авторизованных пользователей
@@ -462,13 +449,18 @@ def signal_handler(sig, frame):
     bot.stop_polling()
     sys.exit(0)
 
+def keep_alive():
+    """Функция для поддержания активности бота"""
+    while True:
+        logging.info("🤖 Бот активен...")
+        time.sleep(300)  # Логируем каждые 5 минут
+
 if __name__ == "__main__":
     # Регистрация обработчиков сигналов
     signal.signal(signal.SIGINT, signal_handler)
     signal.signal(signal.SIGTERM, signal_handler)
     
     logging.info("🚀 Бот запущен и готов к работе...")
-    logging.info(f"🔐 Пароль для авторизации: {BOT_PASSWORD}")
     
     try:
         rates = currency_manager.get_current_rates()
@@ -476,10 +468,9 @@ if __name__ == "__main__":
     except Exception as e:
         logging.error(f"❌ Не удалось загрузить валюты: {e}")
     
-    # Запускаем Flask в отдельном потоке
-    flask_thread = Thread(target=run_flask, daemon=True)
-    flask_thread.start()
-    logging.info(f"🌐 Flask healthcheck запущен на порту {os.getenv('PORT', 10000)}")
+    # Запускаем keep-alive в отдельном потоке
+    keep_alive_thread = Thread(target=keep_alive, daemon=True)
+    keep_alive_thread.start()
     
     try:
         bot.infinity_polling(timeout=60, long_polling_timeout=60)
