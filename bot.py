@@ -7,8 +7,9 @@ import telebot
 from telebot import types
 import signal
 import sys
+from threading import Thread
+from flask import Flask
 
-# Получение переменных окружения
 TELEGRAM_TOKEN = os.getenv('TELEGRAM_TOKEN')
 BOT_PASSWORD = os.getenv('BOT_PASSWORD')
 
@@ -25,6 +26,22 @@ logging.basicConfig(
         logging.StreamHandler()
     ]
 )
+
+# Flask приложение для healthcheck (чтобы Render не усыпил бота)
+app = Flask(__name__)
+
+@app.route('/')
+def home():
+    return "Currency Bot is running!", 200
+
+@app.route('/health')
+def health():
+    return {"status": "ok", "bot": "running"}, 200
+
+def run_flask():
+    """Запуск Flask в отдельном потоке"""
+    port = int(os.getenv('PORT', 10000))
+    app.run(host='0.0.0.0', port=port, debug=False, use_reloader=False)
 
 bot = telebot.TeleBot(TELEGRAM_TOKEN)
 # Словарь для хранения авторизованных пользователей
@@ -458,6 +475,11 @@ if __name__ == "__main__":
         logging.info(f"📊 Загружено {len(rates)} валют из Firebase")
     except Exception as e:
         logging.error(f"❌ Не удалось загрузить валюты: {e}")
+    
+    # Запускаем Flask в отдельном потоке
+    flask_thread = Thread(target=run_flask, daemon=True)
+    flask_thread.start()
+    logging.info(f"🌐 Flask healthcheck запущен на порту {os.getenv('PORT', 10000)}")
     
     try:
         bot.infinity_polling(timeout=60, long_polling_timeout=60)
