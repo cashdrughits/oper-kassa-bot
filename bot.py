@@ -67,8 +67,8 @@ except Exception as e:
 class CurrencyManager:
     def __init__(self):
         self.currencies_structure = [
-            {'code': 'USD_WHITE', 'flag': 'us', 'name': 'Доллар США (белый)', 'showRates': True},
             {'code': 'USD_BLUE', 'flag': 'us', 'name': 'Доллар США (синий)', 'showRates': True},
+            {'code': 'USD_WHITE', 'flag': 'us', 'name': 'Доллар США (белый)', 'showRates': True},
             {'code': 'EUR', 'flag': 'eu', 'name': 'Евро', 'showRates': True},
             {'code': 'GBP', 'flag': 'gb', 'name': 'Фунт стерлингов', 'showRates': False},
             {'code': 'CNY', 'flag': 'cn', 'name': 'Китайский юань', 'showRates': False},
