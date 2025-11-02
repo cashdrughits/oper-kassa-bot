@@ -418,7 +418,7 @@ def keep_alive():
     """Функция для поддержания активности бота"""
     while True:
         logging.info("🤖 Бот активен...")
-        time.sleep(500)
+        time.sleep(3000)
 
 if __name__ == "__main__":
     signal.signal(signal.SIGINT, signal_handler)
@@ -440,3 +440,4 @@ if __name__ == "__main__":
     except Exception as e:
         logging.error(f"❌ Бот остановлен с ошибкой: {e}")
         sys.exit(1)
+
